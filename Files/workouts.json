@@ -1,0 +1,24 @@
+{
+  "workoutList": [
+    {
+      "activity": "Run",
+      "name": "Run",
+      "date": "Fri Jul 23 2021",
+      "time": "16:49:08",
+      "duration": 25.0,
+      "distance": 5.0,
+      "pace": 5.0,
+      "notes": ""
+    },
+    {
+      "activity": "Run",
+      "name": "Woohoooo",
+      "date": "Fri Jul 23 2021",
+      "time": "16:53:43",
+      "duration": 25.0,
+      "distance": 8.0,
+      "pace": 3.125,
+      "notes": "Second run"
+    }
+  ]
+}
