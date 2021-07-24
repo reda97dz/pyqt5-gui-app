@@ -1,14 +1,15 @@
-from PyQt5.QtGui import QStandardItemModel
+from PyQt5.QtGui import QStandardItem, QStandardItemModel
+from numpy.core import einsumfunc
 from AddWorkout import AddWorkoutGUI
 import sys, json
 import numpy as np
 import PyQt5
-from PyQt5.QtCore import QDate, Qt
+from PyQt5.QtCore import QDate, QLine, Qt
 from PyQt5.QtWidgets import (QApplication, QGridLayout, QLabel, QMainWindow, QComboBox, QPushButton, QCheckBox, 
                             QFormLayout, QDockWidget, QTableView, QHeaderView, QGraphicsView, QWidget)
 from PyQt5.QtChart import QChart, QChartView, QLineSeries, QValueAxis
 from AddWorkout import AddWorkoutGUI
-
+from qt_material import apply_stylesheet
 
 class MyWorkoutsView(QChartView):
     
@@ -48,11 +49,28 @@ class MainWindow(QMainWindow):
         
         self.setMinimumSize(1200, 600)
         self.setWindowTitle("My Workouts")
-
-        self.setupToolsDockWidget()
+       
+        self.setupWidgets()
         self.setupChart()
+        self.setupToolsDockWidget()
+        
         # self.setupMenu()
         self.show()
+    
+    def setupWidgets(self):
+        """Set up some default comboboxes
+        """
+        self.year_cb = QComboBox()
+        self.year_cb.addItem("2021")
+        self.year_cb.addItem("2020")
+        self.year_cb.setCurrentText("2021")
+        self.year_cb.currentTextChanged.connect(self.changeYear)
+        
+        self.months = ["All","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+        self.month_cb = QComboBox()
+        self.month_cb.addItems(self.months[:QDate.currentDate().month()+1])
+        self.month_cb.setCurrentIndex(len(self.months[:QDate.currentDate().month()+1])-1)
+        self.month_cb.currentTextChanged.connect(self.changeMonth)
     
     def setupChart(self):
         """
@@ -61,32 +79,52 @@ class MainWindow(QMainWindow):
 
         self.model = QStandardItemModel()
         self.model.setColumnCount(5)
-        self.model.setHorizontalHeaderLabels(['Activity', 'Date', 'Distance', 'Time', 'Pace'])
+        self.model.setHorizontalHeaderLabels(['Activity', 'Date', 'Distance', 'Timing', 'Pace'])
         
-        data = self.loadJSONFile()
-        self.data_arr = np.array(data)
+        self.data = self.loadJSONFile()
         
-        self.dates = self.data_arr[:,1]
-        # self.distances = data_arr[:,2]
-        # self.timings = data_arr[:,3]
-        # self.paces = data_arr[:,4]
+        activities, self.dates, durations, distances, paces = [], [], [], [], []
+        for item in range(len(self.data)):
+            activities.append(self.data[item][0])
+            self.dates.append(self.data[item][1])
+            durations.append(self.data[item][2])
+            distances.append(self.data[item][3])
+            paces.append(self.data[item][4])
         
-        self.split_dates = []
-        for d in self.dates:
-            self.split_dates.append(d.split(' '))
+        self.setupTable()
+    
+    def setupTable(self):
+        """Update tableview
+        """
+        new_arr = []
+        for i,d in enumerate(self.dates):
+            t= d.split(' ')
+            new_arr.append(t)
         
+        current_month = self.month_cb.currentText()
+        current_year = self.year_cb.currentText()
         
-        self.drawChart()
+        filtered = []
+        for i, date in enumerate(new_arr):
+            values = []
+            if str(date[1]) == str(current_month)  and str(date[3]) == str(current_year):
+                values.append(date[2])
+                values.append(self.data[i][2])
+                values.append(self.data[i][3])
+                values.append(self.data[i][4])
+                filtered.append(values)
+                values = []
+        
+        for value in range(len(filtered)):
+            items = [QStandardItem(str(item)) for item in self.data[value]] 
+            self.model.insertRow(value, items)
+            
         
     def drawChart(self):
         """
         Draw chart based on selected year and month
         """
-        current_month = self.year_cb.currentText()
-        current_year = self.month_cb.currentText()
         
-        # for date in self.split_dates:
-        #     if date[1] == current_month and date[2] == current_year:
                 
             
     def loadJSONFile(self):
@@ -146,22 +184,11 @@ class MainWindow(QMainWindow):
         self.legend_cb.addItem("Align Right", Qt.AlignRight)
         self.legend_cb.addItem("Align Bottom", Qt.AlignBottom)
         # self.legend_cb.currentTextChanged.connect(self.changeLegend)
-        
-        
+        year_label = QLabel("Year")
+        month_label = QLabel("Month")
         # self.antialiasing_check_box = QCheckBox()
         # self.antialiasing_check_box.toggled.connect(self.toggleAntialiasing)
-        year_label = QLabel("Year")
-        self.year_cb = QComboBox()
-        self.year_cb.addItem("2021")
-        self.year_cb.addItem("2020")
-        self.year_cb.setCurrentText("2021")
-        self.year_cb.currentTextChanged.connect(self.changeYear)
         
-        self.months = ["All","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
-        month_label = QLabel("Month")
-        self.month_cb = QComboBox()
-        self.month_cb.addItems(self.months[:QDate.currentDate().month()+1])
-        self.month_cb.setCurrentIndex(len(self.months[:QDate.currentDate().month()+1])-1)
         # self.month_cb.clear()
         # self.month_cb.currentTextChanged.connect(self.changeMonth)
         
@@ -177,7 +204,10 @@ class MainWindow(QMainWindow):
         add_data_button = QPushButton("Add new workout")
         add_data_button.clicked.connect(self.addData)
         
-        data_table_view = QTableView()
+        self.data_table_view = QTableView()
+        self.data_table_view.setModel(self.model)
+        self.data_table_view.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.data_table_view.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
         
         dock_form = QFormLayout()
         dock_form.setAlignment(Qt.AlignTop)
@@ -190,7 +220,7 @@ class MainWindow(QMainWindow):
         dock_form.addRow(reset_button)
         dock_form.spacing()
         dock_form.addRow(period_select_box)
-        dock_form.addRow(data_table_view)
+        dock_form.addRow(self.data_table_view)
         dock_form.addRow(add_data_button)
         
         
@@ -212,9 +242,19 @@ class MainWindow(QMainWindow):
             self.month_cb.setCurrentIndex(len(self.months[:QDate.currentDate().month()+1])-1)
         elif self.year_cb.currentText() == '2020':
             self.month_cb.addItems(self.months)
-            
-            
+        
+        self.model.clear()
+        self.setupTable()
     
+    def changeMonth(self):
+        """
+        update table view when month is changed
+        """
+        self.model.clear()
+        if self.month_cb.currentText() == 'All':
+            print()    
+        self.setupTable()
+        
     def addData(self):
         """
         Add new workout when button is clicked
@@ -227,4 +267,5 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
+    # apply_stylesheet(app, theme='dark_amber.xml')
     sys.exit(app.exec_())

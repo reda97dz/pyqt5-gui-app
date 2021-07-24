@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (QAbstractSpinBox, QComboBox, QDateEdit, QDesktopWid
                             QTimeEdit, QVBoxLayout, QWidget, QApplication)
 from AddWorkoutStylesheet import stylesheet
 
+from qt_material import apply_stylesheet
 
 
 class AddWorkoutGUI(QWidget):
@@ -35,6 +36,7 @@ class AddWorkoutGUI(QWidget):
         self.setMinimumSize(400, 550)
         self.setWindowFlag(Qt.FramelessWindowHint)
         self.setStyleSheet(stylesheet)
+        # apply_stylesheet(self, theme='light_amber.xml')
         self.setupWindow()
         
         self.show()
