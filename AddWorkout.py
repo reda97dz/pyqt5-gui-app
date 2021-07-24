@@ -9,8 +9,8 @@ from AddWorkoutStylesheet import stylesheet
 
 
 class AddWorkoutGUI(QWidget):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super(AddWorkoutGUI, self).__init__(parent)
         # self.parent = parent
         self.startUI()
         
@@ -34,7 +34,7 @@ class AddWorkoutGUI(QWidget):
         """
         self.setMinimumSize(400, 550)
         self.setWindowFlag(Qt.FramelessWindowHint)
-        
+        self.setStyleSheet(stylesheet)
         self.setupWindow()
         
         self.show()
@@ -218,9 +218,9 @@ class AddWorkoutGUI(QWidget):
         
         self.close()
     
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    app.setStyleSheet(stylesheet)
-    window = AddWorkoutGUI()
+# if __name__ == '__main__':
+#     app = QApplication(sys.argv)
+#     # app.setStyleSheet(stylesheet)
+#     window = AddWorkoutGUI()
 
-    sys.exit(app.exec_())
+#     sys.exit(app.exec_())

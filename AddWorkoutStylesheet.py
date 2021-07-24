@@ -27,7 +27,7 @@ stylesheet = """
         color: #D3D3D3;
         border-width: 1px; 
         border-style: solid;
-        border-color: #F58735 #F58735 #F58735 #F58735;
+        border-color: #D3D3D3 #D3D3D3 #D3D3D3 #D3D3D3;
     }
     
     QTextEdit{
@@ -35,7 +35,7 @@ stylesheet = """
         color: #D3D3D3;
         border-width: 1px; 
         border-style: solid;
-        border-color: #F58735 #F58735 #F58735 #F58735;
+        border-color: #D3D3D3 #D3D3D3 #D3D3D3 #D3D3D3;
     }
     
     QComboBox{
@@ -44,7 +44,7 @@ stylesheet = """
         color: #D3D3D3;
         border-width: 1px; 
         border-style: solid;
-        border-color: #F58735 #F58735 #F58735 #F58735;
+        border-color: #D3D3D3 #D3D3D3 #D3D3D3 #D3D3D3;
     }
     
     QSpinBox, QDoubleSpinBox{
@@ -54,7 +54,7 @@ stylesheet = """
         color: #D3D3D3;
         border-width: 1px; 
         border-style: solid;
-        border-color: #F58735 #F58735 #F58735 #F58735;
+        border-color: #D3D3D3 #D3D3D3 #D3D3D3 #D3D3D3;
     }
     
     
