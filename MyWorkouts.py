@@ -80,7 +80,6 @@ class MainWindow(QMainWindow):
         self.model = QStandardItemModel()
         self.model.setColumnCount(5)
         self.model.setHorizontalHeaderLabels(['Activity', 'Date', 'Distance', 'Timing', 'Pace'])
-        
         self.data = self.loadJSONFile()
         
         activities, self.dates, durations, distances, paces = [], [], [], [], []
@@ -88,12 +87,12 @@ class MainWindow(QMainWindow):
             activities.append(self.data[item][0])
             self.dates.append(self.data[item][1])
             durations.append(self.data[item][2])
-            distances.append(self.data[item][3])
+            self.distances.append(self.data[item][3])
             paces.append(self.data[item][4])
         
-        self.setupTable()
+        self.setupTable(all=False)
     
-    def setupTable(self):
+    def setupTable(self, all=False):
         """Update tableview
         """
         new_arr = []
@@ -115,17 +114,13 @@ class MainWindow(QMainWindow):
                 filtered.append(values)
                 values = []
         
+        line_series = QLineSeries()
+        
         for value in range(len(filtered)):
+            # line_series.append(self.distances[value])
             items = [QStandardItem(str(item)) for item in self.data[value]] 
-            self.model.insertRow(value, items)
-            
+            self.model.insertRow(value, items)  
         
-    def drawChart(self):
-        """
-        Draw chart based on selected year and month
-        """
-        
-                
             
     def loadJSONFile(self):
         """
