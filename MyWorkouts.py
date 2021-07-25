@@ -109,6 +109,7 @@ class MainWindow(QMainWindow):
             paces.append(self.data[item][4])
         
         
+        
         days = [4,8,10,14,17,20]
         series = np.empty(25) * np.nan
         series[days] = [4, 4.9, 3.82, 3.8, 4.86, 5]
@@ -116,12 +117,19 @@ class MainWindow(QMainWindow):
         canvas = CreateCanvas(self)
         x = np.arange(1,26, step=1)
         x1 = np.arange(0,25)
+        
+        canvas.axes.bar(x1[smask],series[smask],width=0.9)
+        
         canvas.axes.plot(x1[smask], series[smask], linestyle='-', marker='o')
         canvas.axes.set_xlim([1,26])
         canvas.axes.set_ylim([0,10])
         canvas.axes.set_xticks(x1)
         canvas.axes.set_yticks(np.arange(0,10))
         canvas.axes.grid(which='major', axis='y', linestyle='--')
+        
+        # axes2 = canvas.axes.twinx()
+        # axes2.bar(x1[smask],series[smask],width=0.9)
+        
         # test = np.array([0,2,5,8,6,4,2,1,5,6])
         # x = np.arange(len(test))
         
