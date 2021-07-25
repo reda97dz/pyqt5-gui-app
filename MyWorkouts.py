@@ -71,18 +71,20 @@ class MainWindow(QMainWindow):
         self.month_cb.addItems(self.months[:QDate.currentDate().month()+1])
         self.month_cb.setCurrentIndex(len(self.months[:QDate.currentDate().month()+1])-1)
         self.month_cb.currentTextChanged.connect(self.changeMonth)
+        
+        self.labels = ['Activity', 'Date', 'Distance', 'Timing', 'Pace']
+        self.model = QStandardItemModel()
     
     def setupChart(self):
         """
         
         """
-
-        self.model = QStandardItemModel()
+        self.model.clear()
         self.model.setColumnCount(5)
-        self.model.setHorizontalHeaderLabels(['Activity', 'Date', 'Distance', 'Timing', 'Pace'])
+        self.model.setHorizontalHeaderLabels(self.labels)
         self.data = self.loadJSONFile()
         
-        activities, self.dates, durations, distances, paces = [], [], [], [], []
+        activities, self.dates, durations, self.distances, paces = [], [], [], [], []
         for item in range(len(self.data)):
             activities.append(self.data[item][0])
             self.dates.append(self.data[item][1])
@@ -231,24 +233,19 @@ class MainWindow(QMainWindow):
         When cb year is changed, edit month according to availabe current month of the year
         """
         self.month_cb.clear()
-        
         if self.year_cb.currentText() == '2021':
             self.month_cb.addItems(self.months[:QDate.currentDate().month()+1])
             self.month_cb.setCurrentIndex(len(self.months[:QDate.currentDate().month()+1])-1)
         elif self.year_cb.currentText() == '2020':
             self.month_cb.addItems(self.months)
         
-        self.model.clear()
-        self.setupTable()
+        self.setupChart()
     
     def changeMonth(self):
         """
         update table view when month is changed
         """
-        self.model.clear()
-        if self.month_cb.currentText() == 'All':
-            print()    
-        self.setupTable()
+        self.setupChart()
         
     def addData(self):
         """
