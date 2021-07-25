@@ -11,6 +11,22 @@ from PyQt5.QtChart import QChart, QChartView, QLineSeries, QValueAxis
 from AddWorkout import AddWorkoutGUI
 from qt_material import apply_stylesheet
 
+import matplotlib
+matplotlib.use('Qt5Agg') # Configure the backend to use Qt5
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
+from matplotlib.figure import Figure
+
+class CreateCanvas(FigureCanvasQTAgg):
+
+    def __init__(self, parent=None, nrow=1, ncol=1):
+        # Create Matplotlib Figure object
+        figure = Figure(figsize=(6, 5), dpi=100)
+        # Reserve width and height space for subplots
+        figure.subplots_adjust(wspace= 0.3, hspace=0.4)
+        # Create the axes and set the number of rows/columns for the subplot(s)
+        self.axes = figure.subplots(nrow, ncol)
+        super(CreateCanvas, self).__init__(figure)
+
 class MyWorkoutsView(QChartView):
     
     def __init__(self, chart):
@@ -91,6 +107,15 @@ class MainWindow(QMainWindow):
             durations.append(self.data[item][2])
             self.distances.append(self.data[item][3])
             paces.append(self.data[item][4])
+        
+        test = np.array([0,2,5,8,6,4,2,1,5,6])
+        x = np.arange(len(test))
+        
+        canvas = CreateCanvas(self)
+        canvas.axes.plot(x, test)
+        
+        self.setCentralWidget(canvas)
+        
         
         self.setupTable(all=False)
     
