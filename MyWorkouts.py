@@ -84,12 +84,15 @@ class MainWindow(QMainWindow):
         
         self.months = ["All","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
         self.month_cb = QComboBox()
-        self.month_cb.addItems(self.months[:QDate.currentDate().month()+1])
-        self.month_cb.setCurrentIndex(len(self.months[:QDate.currentDate().month()+1])-1)
+        self.current_month = QDate.currentDate().month()
+        self.month_cb.addItems(self.months[:self.current_month+1])
+        self.month_cb.setCurrentIndex(len(self.months[:self.current_month+1])-1)
         self.month_cb.currentTextChanged.connect(self.changeMonth)
         
         self.labels = ['Activity', 'Date', 'Distance', 'Timing', 'Pace']
         self.model = QStandardItemModel()
+        
+        self.data = self.loadJSONFile()
     
     def setupChart(self):
         """
@@ -98,7 +101,6 @@ class MainWindow(QMainWindow):
         self.model.clear()
         self.model.setColumnCount(5)
         self.model.setHorizontalHeaderLabels(self.labels)
-        self.data = self.loadJSONFile()
         
         activities, self.dates, durations, self.distances, paces = [], [], [], [], []
         for item in range(len(self.data)):
@@ -108,27 +110,52 @@ class MainWindow(QMainWindow):
             self.distances.append(self.data[item][3])
             paces.append(self.data[item][4])
         
+        new_arr = []
+        for i,d in enumerate(self.dates):
+            t= d.split(' ')
+            new_arr.append(t)
         
+        current_month = self.month_cb.currentText()
+        current_year = self.year_cb.currentText()
         
-        days = [4,8,10,14,17,20]
-        series = np.empty(25) * np.nan
-        series[days] = [4, 4.9, 3.82, 3.8, 4.86, 5]
-        smask = np.isfinite(series)
+        self.filtered = []
+        for i, date in enumerate(new_arr):
+            values = []
+            if str(date[1]) == str(current_month)  and str(date[3]) == str(current_year):
+                values.append(date[2])
+                values.append(self.data[i][2])
+                values.append(self.data[i][3])
+                values.append(self.data[i][4])
+                self.filtered.append(values)
+                values = []
+        
+        dates = []
+        for value in self.filtered:
+            dates.append(int(value[0]))
+        
+        distance_series = np.empty(QDate.currentDate().day()) * np.nan
+        distance_series[dates] = [value[2] for value in self.filtered]
+        smask = np.isfinite(distance_series)
+        
         canvas = CreateCanvas(self)
-        x = np.arange(1,26, step=1)
-        x1 = np.arange(0,25)
+        x1 = np.arange(0,QDate.currentDate().day())
         
-        canvas.axes.bar(x1[smask],series[smask],width=0.9)
+        canvas.axes.bar(x1[smask],distance_series[smask],width=0.9)
         
-        canvas.axes.plot(x1[smask], series[smask], linestyle='-', marker='o')
-        canvas.axes.set_xlim([1,26])
-        canvas.axes.set_ylim([0,10])
+        # canvas.axes.plot(x1[smask], distance_series[smask], linestyle='-', marker='o')
+        canvas.axes.set_xlim([1,QDate.currentDate().day()])
+        canvas.axes.set_ylim([0,8])
         canvas.axes.set_xticks(x1)
-        canvas.axes.set_yticks(np.arange(0,10))
+        canvas.axes.set_yticks(np.arange(0,8))
         canvas.axes.grid(which='major', axis='y', linestyle='--')
         
-        # axes2 = canvas.axes.twinx()
-        # axes2.bar(x1[smask],series[smask],width=0.9)
+        pace_series = np.empty(QDate.currentDate().day()) * np.nan
+        pace_series[dates] = [value[-1] for value in self.filtered]
+        smask = np.isfinite(pace_series)
+        
+        axes2 = canvas.axes.twinx()
+        axes2.plot(x1[smask],pace_series[smask],linestyle='-', marker='o')
+        axes2.set_ylim([10,4])
         
         # test = np.array([0,2,5,8,6,4,2,1,5,6])
         # x = np.arange(len(test))
@@ -139,33 +166,13 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(canvas)
         
         
-        self.setupTable(all=False)
+        self.setupTable()
     
-    def setupTable(self, all=False):
+    def setupTable(self):
         """Update tableview
         """
-        new_arr = []
-        for i,d in enumerate(self.dates):
-            t= d.split(' ')
-            new_arr.append(t)
-        
-        current_month = self.month_cb.currentText()
-        current_year = self.year_cb.currentText()
-        
-        filtered = []
-        for i, date in enumerate(new_arr):
-            values = []
-            if str(date[1]) == str(current_month)  and str(date[3]) == str(current_year):
-                values.append(date[2])
-                values.append(self.data[i][2])
-                values.append(self.data[i][3])
-                values.append(self.data[i][4])
-                filtered.append(values)
-                values = []
-        
-        line_series = QLineSeries()
-        
-        for value in range(len(filtered)):
+                
+        for value in range(len(self.filtered)):
             # line_series.append(self.distances[value])
             items = [QStandardItem(str(item)) for item in self.data[value]] 
             self.model.insertRow(value, items)  
