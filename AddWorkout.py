@@ -12,7 +12,7 @@ from qt_material import apply_stylesheet
 class AddWorkoutGUI(QWidget):
     def __init__(self, parent=None):
         super(AddWorkoutGUI, self).__init__(parent)
-        # self.parent = parent
+        self.parent = parent
         self.startUI()
         
     def center(self):
@@ -217,6 +217,7 @@ class AddWorkoutGUI(QWidget):
             workout_data.update(workout_info)
             json_f.seek(0)
             json.dump(workout_data, json_f, indent=2)
+        
         
         self.close()
     

@@ -5,7 +5,7 @@ import sys, json
 import numpy as np
 import PyQt5
 from PyQt5.QtCore import QDate, QLine, Qt
-from PyQt5.QtWidgets import (QApplication, QGridLayout, QLabel, QMainWindow, QComboBox, QPushButton, QCheckBox, 
+from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QGridLayout, QLabel, QMainWindow, QComboBox, QPushButton, QCheckBox, 
                             QFormLayout, QDockWidget, QTableView, QHeaderView, QGraphicsView, QWidget)
 from PyQt5.QtChart import QChart, QChartView, QLineSeries, QValueAxis
 from AddWorkout import AddWorkoutGUI
@@ -77,6 +77,7 @@ class MainWindow(QMainWindow):
         """Set up some default comboboxes
         """
         self.year_cb = QComboBox()
+        self.current_year = QDate.currentDate().year()
         self.year_cb.addItem("2021")
         self.year_cb.addItem("2020")
         self.year_cb.setCurrentText("2021")
@@ -89,7 +90,9 @@ class MainWindow(QMainWindow):
         self.month_cb.setCurrentIndex(len(self.months[:self.current_month+1])-1)
         self.month_cb.currentTextChanged.connect(self.changeMonth)
         
-        self.labels = ['Activity', 'Date', 'Distance', 'Timing', 'Pace']
+        self.current_day = QDate.currentDate().day()
+        
+        self.labels = ['Activity', 'Date', 'Distance (km)', 'Timing', 'Pace (km/in)']
         self.model = QStandardItemModel()
         
         self.data = self.loadJSONFile()
@@ -115,13 +118,14 @@ class MainWindow(QMainWindow):
             t= d.split(' ')
             new_arr.append(t)
         
-        current_month = self.month_cb.currentText()
-        current_year = self.year_cb.currentText()
+        selected_month = self.month_cb.currentText()
+        selected_year = self.year_cb.currentText()
+        # self.filterData()
         
         self.filtered = []
         for i, date in enumerate(new_arr):
             values = []
-            if str(date[1]) == str(current_month)  and str(date[3]) == str(current_year):
+            if str(date[1]) == str(selected_month)  and str(date[3]) == str(selected_year):
                 values.append(date[2])
                 values.append(self.data[i][2])
                 values.append(self.data[i][3])
@@ -133,23 +137,28 @@ class MainWindow(QMainWindow):
         for value in self.filtered:
             dates.append(int(value[0]))
         
-        distance_series = np.empty(QDate.currentDate().day()) * np.nan
+        if(self.current_year == int(selected_year) and self.current_month == self.months.index(selected_month)):
+            num_days = QDate.currentDate().day()
+        else:
+            num_days = QDate(int(selected_year), self.months.index(selected_month), 1).daysInMonth()
+        
+        distance_series = np.empty(num_days+1) * np.nan
         distance_series[dates] = [value[2] for value in self.filtered]
         smask = np.isfinite(distance_series)
         
         canvas = CreateCanvas(self)
-        x1 = np.arange(0,QDate.currentDate().day())
+        x1 = np.arange(0,num_days+1)
         
         canvas.axes.bar(x1[smask],distance_series[smask],width=0.9)
         
         # canvas.axes.plot(x1[smask], distance_series[smask], linestyle='-', marker='o')
-        canvas.axes.set_xlim([1,QDate.currentDate().day()])
+        canvas.axes.set_xlim([1,num_days+1])
         canvas.axes.set_ylim([0,8])
         canvas.axes.set_xticks(x1)
         canvas.axes.set_yticks(np.arange(0,8))
         canvas.axes.grid(which='major', axis='y', linestyle='--')
         
-        pace_series = np.empty(QDate.currentDate().day()) * np.nan
+        pace_series = np.empty(num_days+1) * np.nan
         pace_series[dates] = [value[-1] for value in self.filtered]
         smask = np.isfinite(pace_series)
         
@@ -167,6 +176,11 @@ class MainWindow(QMainWindow):
         
         
         self.setupTable()
+    
+    def filterDate(self):
+        """Filter data according to selected month and year
+        """
+        
     
     def setupTable(self):
         """Update tableview
@@ -257,22 +271,24 @@ class MainWindow(QMainWindow):
         
         self.data_table_view = QTableView()
         self.data_table_view.setModel(self.model)
+        self.data_table_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.data_table_view.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.data_table_view.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        # self.data_table_view.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
         
         dock_form = QFormLayout()
         dock_form.setAlignment(Qt.AlignTop)
-        dock_form.addRow(theme_label)
-        dock_form.addRow(themes_cb)
-        dock_form.addRow(animation_label)
-        dock_form.addRow(self.animations_cb)
-        dock_form.addRow(legend_label)
-        dock_form.addRow(self.legend_cb)
-        dock_form.addRow(reset_button)
+        # dock_form.addRow(theme_label)
+        # dock_form.addRow(themes_cb)
+        # dock_form.addRow(animation_label)
+        # dock_form.addRow(self.animations_cb)
+        # dock_form.addRow(legend_label)
+        # dock_form.addRow(self.legend_cb)
+        # dock_form.addRow(reset_button)
         dock_form.spacing()
         dock_form.addRow(period_select_box)
         dock_form.addRow(self.data_table_view)
         dock_form.addRow(add_data_button)
+        
         
         
         tools_container = QWidget()
@@ -286,29 +302,46 @@ class MainWindow(QMainWindow):
         """
         When cb year is changed, edit month according to availabe current month of the year
         """
+        self.do_not_call_changeMonth_function = True
         self.month_cb.clear()
         if self.year_cb.currentText() == '2021':
             self.month_cb.addItems(self.months[:QDate.currentDate().month()+1])
             self.month_cb.setCurrentIndex(len(self.months[:QDate.currentDate().month()+1])-1)
-        elif self.year_cb.currentText() == '2020':
+        else:
             self.month_cb.addItems(self.months)
+            self.do_not_call_changeMonth_function = False
+            self.month_cb.setCurrentIndex(1)
         
-        self.setupChart()
+        
+        # self.setupChart()
     
     def changeMonth(self):
         """
         update table view when month is changed
         """
-        self.setupChart()
+        if self.do_not_call_changeMonth_function is not None and self.do_not_call_changeMonth_function:
+            print("skipping update")
+            self.do_not_call_changeMonth_function = False
+        else:
+            self.setupChart()
         
     def addData(self):
         """
         Add new workout when button is clicked
         """
         # self.hide()
-        self.add_workout = AddWorkoutGUI()
+        self.add_workout = AddWorkoutGUI(self)
         # add_workout.startUI()
         self.add_workout.show()
+        
+        # self.refresh()
+    
+    def refresh(self):
+        """
+        Refresh after add workout
+        """
+        self.data = self.loadJSONFile()
+        self.setupChart()
     
 if __name__ == "__main__":
     app = QApplication(sys.argv)
