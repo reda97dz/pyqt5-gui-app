@@ -15,6 +15,7 @@ import matplotlib
 matplotlib.use('Qt5Agg') # Configure the backend to use Qt5
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
 from matplotlib.figure import Figure
+import seaborn as sns
 
 class CreateCanvas(FigureCanvasQTAgg):
 
@@ -25,7 +26,10 @@ class CreateCanvas(FigureCanvasQTAgg):
         figure.subplots_adjust(wspace= 0.3, hspace=0.4)
         # Create the axes and set the number of rows/columns for the subplot(s)
         self.axes = figure.subplots(nrow, ncol)
+        
         super(CreateCanvas, self).__init__(figure)
+        
+    
 
 class MyWorkoutsView(QChartView):
     
@@ -149,23 +153,34 @@ class MainWindow(QMainWindow):
         canvas = CreateCanvas(self)
         x1 = np.arange(0,num_days+1)
         
-        canvas.axes.bar(x1[smask],distance_series[smask],width=0.9)
+        canvas.axes.bar(x1[smask],distance_series[smask],width=0.9, color='#152238', label='Distance (km)')
+        # canvas.axes = sns.barplot(x=x1[smask], y=distance_series, palette='pastel', ci=None)
         
         # canvas.axes.plot(x1[smask], distance_series[smask], linestyle='-', marker='o')
         canvas.axes.set_xlim([1,num_days+1])
         canvas.axes.set_ylim([0,8])
         canvas.axes.set_xticks(x1)
         canvas.axes.set_yticks(np.arange(0,8))
-        canvas.axes.grid(which='major', axis='y', linestyle='--')
+        canvas.axes.grid(which='major', axis='y', linestyle='--', alpha=0.2)
+        canvas.axes.legend()
+        
+        
+
+        # canvas.axes.spines['bottom'].set_position(('axes', -0.04))
+        # canvas.axes.spines['left'].set_position(('axes', 0.015))
+        # canvas.axes.spines['left'].set_position(('axes', -0.015))
+
         
         pace_series = np.empty(num_days+1) * np.nan
         pace_series[dates] = [value[-1] for value in self.filtered]
         smask = np.isfinite(pace_series)
         
         axes2 = canvas.axes.twinx()
-        axes2.plot(x1[smask],pace_series[smask],linestyle='-', marker='o')
+        axes2.plot(x1[smask],pace_series[smask], linestyle='--', marker='o', color='#F58735', label='Pace (min/km)')
         axes2.set_ylim([10,4])
-        
+        axes2.legend(loc=0)
+
+
         # test = np.array([0,2,5,8,6,4,2,1,5,6])
         # x = np.arange(len(test))
         
@@ -330,7 +345,7 @@ class MainWindow(QMainWindow):
         Add new workout when button is clicked
         """
         # self.hide()
-        self.add_workout = AddWorkoutGUI(self)
+        self.add_workout = AddWorkoutGUI()
         # add_workout.startUI()
         self.add_workout.show()
         
