@@ -59,6 +59,16 @@
       "distance": 5.0,
       "pace": 5.42,
       "notes": ""
+    },
+    {
+      "activity": "Run",
+      "name": "Run",
+      "date": "Tue Jul 27 2021",
+      "time": "19:22:24",
+      "duration": 37.0,
+      "distance": 6.4,
+      "pace": 5.78125,
+      "notes": ""
     }
   ]
 }

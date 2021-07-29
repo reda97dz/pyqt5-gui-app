@@ -96,7 +96,7 @@ class MainWindow(QMainWindow):
         
         self.current_day = QDate.currentDate().day()
         
-        self.labels = ['Activity', 'Date', 'Distance (km)', 'Timing', 'Pace (km/in)']
+        self.labels = ['Activity', 'Date', 'Timing', 'Distance (km)', 'Pace (km/in)']
         self.model = QStandardItemModel()
         
         self.data = self.loadJSONFile()
@@ -124,16 +124,15 @@ class MainWindow(QMainWindow):
         
         selected_month = self.month_cb.currentText()
         selected_year = self.year_cb.currentText()
-        # self.filterData()
         
         self.filtered = []
         for i, date in enumerate(new_arr):
             values = []
             if str(date[1]) == str(selected_month)  and str(date[3]) == str(selected_year):
                 values.append(date[2])
-                values.append(self.data[i][2])
-                values.append(self.data[i][3])
-                values.append(self.data[i][4])
+                values.append(self.data[i][2]) #timing
+                values.append(self.data[i][3]) #disance
+                values.append(self.data[i][4]) #pace
                 self.filtered.append(values)
                 values = []
         
@@ -154,21 +153,12 @@ class MainWindow(QMainWindow):
         x1 = np.arange(0,num_days+1)
         
         canvas.axes.bar(x1[smask],distance_series[smask],width=0.9, color='#152238', label='Distance (km)')
-        # canvas.axes = sns.barplot(x=x1[smask], y=distance_series, palette='pastel', ci=None)
-        
-        # canvas.axes.plot(x1[smask], distance_series[smask], linestyle='-', marker='o')
+
         canvas.axes.set_xlim([1,num_days+1])
         canvas.axes.set_ylim([0,8])
         canvas.axes.set_xticks(x1)
         canvas.axes.set_yticks(np.arange(0,8))
         canvas.axes.grid(which='major', axis='y', linestyle='--', alpha=0.2)
-        canvas.axes.legend()
-        
-        
-
-        # canvas.axes.spines['bottom'].set_position(('axes', -0.04))
-        # canvas.axes.spines['left'].set_position(('axes', 0.015))
-        # canvas.axes.spines['left'].set_position(('axes', -0.015))
 
         
         pace_series = np.empty(num_days+1) * np.nan
@@ -178,29 +168,25 @@ class MainWindow(QMainWindow):
         axes2 = canvas.axes.twinx()
         axes2.plot(x1[smask],pace_series[smask], linestyle='--', marker='o', color='#F58735', label='Pace (min/km)')
         axes2.set_ylim([10,4])
-        axes2.legend(loc=0)
-
-
-        # test = np.array([0,2,5,8,6,4,2,1,5,6])
-        # x = np.arange(len(test))
         
-        # canvas = CreateCanvas(self)
-        # canvas.axes.plot(x, test)
-        # self.addToolBar(NavigationToolbar2QT(canvas, self))
+        labels = [item.get_text() for item in axes2.get_yticklabels()]
+        for i in range(len(labels)):
+            labels[i] = '{}:00'.format(i+4)
+            
+        axes2.set_yticklabels(labels)
+        
+        canvas.figure.legend(loc="upper right", bbox_to_anchor=(1,1), bbox_transform=canvas.axes.transAxes)
+
         self.setCentralWidget(canvas)
         
         
         self.setupTable()
-    
-    def filterDate(self):
-        """Filter data according to selected month and year
-        """
         
     
     def setupTable(self):
         """Update tableview
         """
-                
+        print(self.filtered)
         for value in range(len(self.filtered)):
             # line_series.append(self.distances[value])
             items = [QStandardItem(str(item)) for item in self.data[value]] 
