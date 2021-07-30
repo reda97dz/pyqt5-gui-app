@@ -8,7 +8,7 @@ from PyQt5.QtCore import QDate, QLine, QPoint, QTime, Qt
 from PyQt5.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QBoxLayout, QDateEdit, QDesktopWidget, QDoubleSpinBox, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QComboBox, QPushButton, QCheckBox, 
                             QFormLayout, QDockWidget, QSpinBox, QTableView, QHeaderView, QGraphicsView, QTextEdit, QTimeEdit, QVBoxLayout, QWidget)
 from PyQt5.QtChart import QChart, QChartView, QLineSeries, QValueAxis
-from AddWorkout import AddWorkoutGUI
+
 from qt_material import apply_stylesheet
 
 import matplotlib
@@ -291,17 +291,17 @@ class MainWindow(QMainWindow):
         self.hours = QSpinBox()
         self.hours.setRange(0,24)
         self.hours.setButtonSymbols(QAbstractSpinBox.NoButtons)
-        # self.hours.valueChanged.connect(self.calculatePace)
+        self.hours.valueChanged.connect(self.calculatePace)
         
         self.minutes = QSpinBox()
         self.minutes.setRange(0,59)
         self.minutes.setButtonSymbols(QAbstractSpinBox.NoButtons)
-        # self.minutes.valueChanged.connect(self.calculatePace)
+        self.minutes.valueChanged.connect(self.calculatePace)
         
         self.seconds = QSpinBox()
         self.seconds.setRange(0,59)
         self.seconds.setButtonSymbols(QAbstractSpinBox.NoButtons)
-        # self.seconds.valueChanged.connect(self.calculatePace)
+        self.seconds.valueChanged.connect(self.calculatePace)
         
         time_colon_label = QLabel(":")
         
@@ -309,7 +309,7 @@ class MainWindow(QMainWindow):
         self.distance_entry.setButtonSymbols(QAbstractSpinBox.NoButtons)
         self.distance_entry.setFixedWidth(190)
         self.distance_entry.setRange(0.1,150.0)
-        # self.distance_entry.valueChanged.connect(self.calculatePace)
+        self.distance_entry.valueChanged.connect(self.calculatePace)
         
         self.pace_minutes = QSpinBox()
         self.pace_minutes.setButtonSymbols(QAbstractSpinBox.NoButtons)
@@ -377,7 +377,7 @@ class MainWindow(QMainWindow):
         
         save_workout_button = QPushButton("Save")
         save_workout_button.setObjectName("save")
-        # saveWorkoutButton.clicked.connect(self.saveWorkout)
+        save_workout_button.clicked.connect(self.saveWorkout)
         
         add_workout = QVBoxLayout()
         add_workout.setAlignment(Qt.AlignTop)
@@ -385,7 +385,6 @@ class MainWindow(QMainWindow):
         add_workout.addWidget(save_workout_button)
         
         add_workout_c = FrameLayout(title="Add New Workout")
-        add_workout_c._is_collasped = False
         add_workout_c.addLayout(add_workout)
         
         
@@ -393,13 +392,6 @@ class MainWindow(QMainWindow):
         
         dock_form = QFormLayout()
         dock_form.setAlignment(Qt.AlignTop)
-        # dock_form.addRow(theme_label)
-        # dock_form.addRow(themes_cb)
-        # dock_form.addRow(animation_label)
-        # dock_form.addRow(self.animations_cb)
-        # dock_form.addRow(legend_label)
-        # dock_form.addRow(self.legend_cb)
-        # dock_form.addRow(reset_button)
         dock_form.spacing()
         dock_form.addRow(period_select_box)
         dock_form.addRow(self.data_table_view)
@@ -413,6 +405,59 @@ class MainWindow(QMainWindow):
         
         self.addDockWidget(Qt.LeftDockWidgetArea, tools_dock)
 
+    def calculatePace(self):
+        """
+        Calculate pace
+        """
+        distance = self.distance_entry.value()
+        
+        hours = self.hours.value()
+        minutes = self.minutes.value()
+        seconds = self.seconds.value()
+
+        run_time = int(hours)*60 + int(minutes) + int(seconds)/60
+        pace = run_time / distance
+        
+        self.pace_minutes.setValue(int(pace))
+        self.pace_seconds.setValue((pace-int(pace))*60)
+    
+        
+    def saveWorkout(self):
+        """
+        Get entry values, open json file and save data
+        """
+        workout_info = {}
+        
+        distance = self.distance_entry.value()
+        
+        hours = self.hours.value()
+        minutes = self.minutes.value()
+        seconds = self.seconds.value()
+        
+        run_time = int(hours)*60 + int(minutes) + int(seconds)/60
+        pace = run_time / distance
+        
+        with open('Files/workouts.json', 'r+') as json_f:
+            workout_data = json.load(json_f)
+            workout_data['workoutList'].append(
+                {
+                    "activity": self.activity_type.currentText(),
+                    "name": self.workout_name_entry.text(),
+                    "date": self.date_entry.date().toString(),
+                    "time": self.time_entry.time().toString(),
+                    "duration": run_time,
+                    "distance": distance,
+                    "pace": pace,
+                    "notes": self.notes_entry.toPlainText()
+                }
+            )
+            
+            workout_data.update(workout_info)
+            json_f.seek(0)
+            json.dump(workout_data, json_f, indent=2)
+        
+        
+        self.close()
     
     def changeYear(self):
         """
@@ -440,17 +485,6 @@ class MainWindow(QMainWindow):
             self.do_not_call_changeMonth_function = False
         else:
             self.setupChart()
-        
-    def addData(self):
-        """
-        Add new workout when button is clicked
-        """
-        # self.hide()
-        self.add_workout = AddWorkoutGUI()
-        # add_workout.startUI()
-        self.add_workout.show()
-        
-        # self.refresh()
     
     def refresh(self):
         """
