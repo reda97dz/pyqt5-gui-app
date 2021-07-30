@@ -4,9 +4,9 @@ from AddWorkout import AddWorkoutGUI
 import sys, json
 import numpy as np
 import PyQt5
-from PyQt5.QtCore import QDate, QLine, Qt
-from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QGridLayout, QLabel, QMainWindow, QComboBox, QPushButton, QCheckBox, 
-                            QFormLayout, QDockWidget, QTableView, QHeaderView, QGraphicsView, QWidget)
+from PyQt5.QtCore import QDate, QLine, QPoint, QTime, Qt
+from PyQt5.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QBoxLayout, QDateEdit, QDesktopWidget, QDoubleSpinBox, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QComboBox, QPushButton, QCheckBox, 
+                            QFormLayout, QDockWidget, QSpinBox, QTableView, QHeaderView, QGraphicsView, QTextEdit, QTimeEdit, QVBoxLayout, QWidget)
 from PyQt5.QtChart import QChart, QChartView, QLineSeries, QValueAxis
 from AddWorkout import AddWorkoutGUI
 from qt_material import apply_stylesheet
@@ -16,6 +16,7 @@ matplotlib.use('Qt5Agg') # Configure the backend to use Qt5
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
 from matplotlib.figure import Figure
 import seaborn as sns
+from FrameLayout import FrameLayout
 
 class CreateCanvas(FigureCanvasQTAgg):
 
@@ -29,8 +30,6 @@ class CreateCanvas(FigureCanvasQTAgg):
         
         super(CreateCanvas, self).__init__(figure)
         
-    
-
 class MyWorkoutsView(QChartView):
     
     def __init__(self, chart):
@@ -58,7 +57,6 @@ class MyWorkoutsView(QChartView):
             self.setDragMode(QGraphicsView.ScrollHandDrag)
             self.start_pos = event.pos()
 
-
 class MainWindow(QMainWindow):
     
     def __init__(self):
@@ -67,7 +65,7 @@ class MainWindow(QMainWindow):
 
     def initializeUI(self):
         
-        self.setMinimumSize(1200, 600)
+        self.setMinimumSize(1300, 650)
         self.setWindowTitle("My Workouts")
        
         self.setupWidgets()
@@ -100,6 +98,8 @@ class MainWindow(QMainWindow):
         self.model = QStandardItemModel()
         
         self.data = self.loadJSONFile()
+
+        self.do_not_call_changeMonth_function = False
     
     def setupChart(self):
         """
@@ -186,13 +186,12 @@ class MainWindow(QMainWindow):
     def setupTable(self):
         """Update tableview
         """
-        print(self.filtered)
+        
         for value in range(len(self.filtered)):
             # line_series.append(self.distances[value])
-            items = [QStandardItem(str(item)) for item in self.data[value]] 
+            items = [QStandardItem(str(item)) for item in self.data[value]]
             self.model.insertRow(value, items)  
-        
-            
+                   
     def loadJSONFile(self):
         """
         Load data from json
@@ -220,8 +219,7 @@ class MainWindow(QMainWindow):
             row_values = []
         
         return data_labels
-        
-        
+            
     def setupToolsDockWidget(self):
         """
         
@@ -229,6 +227,7 @@ class MainWindow(QMainWindow):
         tools_dock = QDockWidget()
         tools_dock.setWindowTitle("Tools")
         tools_dock.setMinimumWidth(400)
+        tools_dock.setMaximumWidth(600)
         tools_dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
         
         theme_label = QLabel("Themes")
@@ -276,6 +275,122 @@ class MainWindow(QMainWindow):
         self.data_table_view.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         # self.data_table_view.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
         
+        ## ADD WORKOUT FORM
+
+        self.workout_name_entry = QLineEdit()
+        
+        self.date_entry = QDateEdit()
+        self.date_entry.setDate(QDate.currentDate())
+        self.date_entry.setFixedHeight(25)
+        self.date_entry.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        
+        activities = ["Run", "Hike", "Walk"]
+        self.activity_type = QComboBox()
+        self.activity_type.addItems(activities)
+        
+        self.hours = QSpinBox()
+        self.hours.setRange(0,24)
+        self.hours.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        # self.hours.valueChanged.connect(self.calculatePace)
+        
+        self.minutes = QSpinBox()
+        self.minutes.setRange(0,59)
+        self.minutes.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        # self.minutes.valueChanged.connect(self.calculatePace)
+        
+        self.seconds = QSpinBox()
+        self.seconds.setRange(0,59)
+        self.seconds.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        # self.seconds.valueChanged.connect(self.calculatePace)
+        
+        time_colon_label = QLabel(":")
+        
+        self.distance_entry = QDoubleSpinBox()
+        self.distance_entry.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self.distance_entry.setFixedWidth(190)
+        self.distance_entry.setRange(0.1,150.0)
+        # self.distance_entry.valueChanged.connect(self.calculatePace)
+        
+        self.pace_minutes = QSpinBox()
+        self.pace_minutes.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self.pace_seconds = QSpinBox()
+        self.pace_seconds.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        
+        activity_v_box = QVBoxLayout()
+        activity_v_box.addWidget(QLabel("Activity"))
+        activity_v_box.addWidget(self.activity_type)
+        
+        date_v_box = QVBoxLayout()
+        date_v_box.addWidget(QLabel("Date"))
+        date_v_box.addWidget(self.date_entry)
+        
+        activity_date_h_box = QHBoxLayout()
+        activity_date_h_box.addLayout(activity_v_box)
+        activity_date_h_box.addLayout(date_v_box)
+        
+        h_label = QLabel("hh")
+        h_label.setObjectName("small_label")
+        m_label = QLabel("mm")
+        m_label.setObjectName("small_label")
+        s_label = QLabel("ss")
+        s_label.setObjectName("small_label")
+        
+        duration_h_box = QHBoxLayout()
+        duration_h_box.addWidget(h_label)
+        duration_h_box.addWidget(self.hours)
+        # duration_h_box.addWidget(time_colon_label)
+        duration_h_box.addWidget(m_label)
+        duration_h_box.addWidget(self.minutes)
+        # duration_h_box.addWidget(time_colon_label)
+        duration_h_box.addWidget(s_label)
+        duration_h_box.addWidget(self.seconds)
+        duration_h_box.addStretch()
+        
+        distance_v_box = QVBoxLayout()
+        distance_v_box.addWidget(QLabel("Distance (km)"))
+        distance_v_box.addWidget(self.distance_entry)
+            
+        
+        duration_v_box = QVBoxLayout()
+        duration_v_box.addWidget(QLabel("Duration"))
+        duration_v_box.addLayout(duration_h_box)
+        
+        duration_distance_h_box = QHBoxLayout()
+        duration_distance_h_box.addLayout(duration_v_box)
+        duration_distance_h_box.addLayout(distance_v_box)
+                
+        pace_h_box = QHBoxLayout()
+        pace_h_box.addWidget(self.pace_minutes)
+        pace_h_box.addWidget(time_colon_label)
+        pace_h_box.addWidget(self.pace_seconds)
+        pace_h_box.addStretch()
+        
+        
+        add_run_form = QFormLayout()
+        add_run_form.setLabelAlignment(Qt.AlignTop)
+        add_run_form.addRow(QLabel("Workout Name"))
+        add_run_form.addRow(self.workout_name_entry)
+        add_run_form.addRow(activity_date_h_box)
+        add_run_form.addRow(duration_distance_h_box)
+        add_run_form.addRow(QLabel("Pace (min/km)"))
+        add_run_form.addRow(pace_h_box)
+        
+        save_workout_button = QPushButton("Save")
+        save_workout_button.setObjectName("save")
+        # saveWorkoutButton.clicked.connect(self.saveWorkout)
+        
+        add_workout = QVBoxLayout()
+        add_workout.setAlignment(Qt.AlignTop)
+        add_workout.addLayout(add_run_form)
+        add_workout.addWidget(save_workout_button)
+        
+        add_workout_c = FrameLayout(title="Add New Workout")
+        add_workout_c._is_collasped = False
+        add_workout_c.addLayout(add_workout)
+        
+        
+        ## FORM
+        
         dock_form = QFormLayout()
         dock_form.setAlignment(Qt.AlignTop)
         # dock_form.addRow(theme_label)
@@ -288,7 +403,7 @@ class MainWindow(QMainWindow):
         dock_form.spacing()
         dock_form.addRow(period_select_box)
         dock_form.addRow(self.data_table_view)
-        dock_form.addRow(add_data_button)
+        dock_form.addRow(add_workout_c)
         
         
         
