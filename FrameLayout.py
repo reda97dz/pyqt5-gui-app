@@ -95,9 +95,11 @@ class FrameLayout(QtWidgets.QWidget):
             self.setMaximumSize(24, 24)
 
             # horizontal == 0
-            self._arrow_horizontal = (QtCore.QPointF(7.0, 8.0), QtCore.QPointF(17.0, 8.0), QtCore.QPointF(12.0, 13.0))
+            self._arrow_horizontal = [QtCore.QLineF(QtCore.QPointF(7.0, 10.0), QtCore.QPointF(12.0, 15.0)), 
+                                    QtCore.QLineF(QtCore.QPointF(17.0, 10.0), QtCore.QPointF(12.0, 15.0))]
             # vertical == 1
-            self._arrow_vertical = (QtCore.QPointF(8.0, 7.0), QtCore.QPointF(13.0, 12.0), QtCore.QPointF(8.0, 17.0))
+            self._arrow_vertical = [QtCore.QLineF(QtCore.QPointF(9.5, 7.5), QtCore.QPointF(14.5, 12.5)), 
+                                    QtCore.QLineF(QtCore.QPointF(9.5, 17.5), QtCore.QPointF(14.5, 12.5))]
             # arrow
             self._arrow = None
             self.setArrow(int(collapsed))
@@ -113,5 +115,5 @@ class FrameLayout(QtWidgets.QWidget):
             painter.begin(self)
             painter.setBrush(QtGui.QColor(192, 192, 192))
             painter.setPen(QtGui.QColor(64, 64, 64))
-            painter.drawPolygon(*self._arrow)
+            painter.drawLines(*self._arrow)
             painter.end()

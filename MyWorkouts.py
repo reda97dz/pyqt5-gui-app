@@ -267,7 +267,7 @@ class MainWindow(QMainWindow):
         # reset_button.clicked.connect(self.resetChartZoom)
         
         add_data_button = QPushButton("Add new workout")
-        add_data_button.clicked.connect(self.addData)
+        add_data_button.clicked.connect(self.saveWorkout)
         
         self.data_table_view = QTableView()
         self.data_table_view.setModel(self.model)
@@ -444,11 +444,11 @@ class MainWindow(QMainWindow):
                     "activity": self.activity_type.currentText(),
                     "name": self.workout_name_entry.text(),
                     "date": self.date_entry.date().toString(),
-                    "time": self.time_entry.time().toString(),
+                    "time": "",
                     "duration": run_time,
                     "distance": distance,
                     "pace": pace,
-                    "notes": self.notes_entry.toPlainText()
+                    "notes": ""
                 }
             )
             
@@ -456,8 +456,13 @@ class MainWindow(QMainWindow):
             json_f.seek(0)
             json.dump(workout_data, json_f, indent=2)
         
-        
-        self.close()
+        self.workout_name_entry.clear()
+        self.minutes.setValue(0)
+        self.seconds.setValue(0)
+        self.distance_entry.setValue(0.1)
+        self.pace_minutes.setValue(0)
+        self.pace_seconds.setValue(0)
+        self.refresh()
     
     def changeYear(self):
         """
