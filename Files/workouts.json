@@ -79,6 +79,26 @@
       "distance": 6.86,
       "pace": 5.964528668610301,
       "notes": ""
+    },
+    {
+      "activity": "Run",
+      "name": "Run",
+      "date": "Tue Aug 3 2021",
+      "time": "",
+      "duration": 30.0,
+      "distance": 5.32,
+      "pace": 5.639097744360902,
+      "notes": ""
+    },
+    {
+      "activity": "Run",
+      "name": "",
+      "date": "Fri Aug 6 2021",
+      "time": "",
+      "duration": 0.0,
+      "distance": 0.1,
+      "pace": 0.0,
+      "notes": ""
     }
   ]
 }

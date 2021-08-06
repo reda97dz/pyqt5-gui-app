@@ -72,9 +72,20 @@ class MainWindow(QMainWindow):
         self.setupChart()
         self.setupToolsDockWidget()
         
-        # self.setupMenu()
+        self.setupMenu()
         self.show()
     
+    def setupMenu(self):
+        """
+        Menu
+        """
+        menu_bar = self.menuBar()
+        menu_bar.setNativeMenuBar(False)
+
+        # Create view menu and add actions
+        view_menu = menu_bar.addMenu('View')
+        view_menu.addAction(self.toggle_dock_tools_act)
+        
     def setupWidgets(self):
         """Set up some default comboboxes
         """
@@ -85,7 +96,7 @@ class MainWindow(QMainWindow):
         self.year_cb.setCurrentText("2021")
         self.year_cb.currentTextChanged.connect(self.changeYear)
         
-        self.months = ["All","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+        self.months = ["All","January","February","March","April","May","June","July","August","September","October","November","December"]
         self.month_cb = QComboBox()
         self.current_month = QDate.currentDate().month()
         self.month_cb.addItems(self.months[:self.current_month+1])
@@ -128,7 +139,7 @@ class MainWindow(QMainWindow):
         self.filtered = []
         for i, date in enumerate(new_arr):
             values = []
-            if str(date[1]) == str(selected_month)  and str(date[3]) == str(selected_year):
+            if str(date[1]) == str(selected_month)[:3]  and str(date[3]) == str(selected_year):
                 values.append(date[2])
                 values.append(self.data[i][2]) #timing
                 values.append(self.data[i][3]) #disance
@@ -153,10 +164,12 @@ class MainWindow(QMainWindow):
         x1 = np.arange(0,num_days+1)
         
         canvas.axes.bar(x1[smask],distance_series[smask],width=0.9, color='#152238', label='Distance (km)')
-
+        canvas.axes.set_title(selected_month)
         canvas.axes.set_xlim([1,num_days+1])
         canvas.axes.set_ylim([0,8])
         canvas.axes.set_xticks(x1)
+        canvas.axes.set_ylabel('Distance (km)')
+        canvas.axes.set_xlabel('Days')
         canvas.axes.set_yticks(np.arange(0,8))
         canvas.axes.grid(which='major', axis='y', linestyle='--', alpha=0.2)
 
@@ -168,6 +181,7 @@ class MainWindow(QMainWindow):
         axes2 = canvas.axes.twinx()
         axes2.plot(x1[smask],pace_series[smask], linestyle='--', marker='o', color='#F58735', label='Pace (min/km)')
         axes2.set_ylim([10,4])
+        axes2.set_ylabel('Pace (min/km)')
         
         labels = [item.get_text() for item in axes2.get_yticklabels()]
         for i in range(len(labels)):
@@ -316,17 +330,17 @@ class MainWindow(QMainWindow):
         self.pace_seconds = QSpinBox()
         self.pace_seconds.setButtonSymbols(QAbstractSpinBox.NoButtons)
         
-        activity_v_box = QVBoxLayout()
-        activity_v_box.addWidget(QLabel("Activity"))
-        activity_v_box.addWidget(self.activity_type)
+        # activity_v_box = QVBoxLayout()
+        # activity_v_box.addWidget(QLabel("Activity"))
+        # activity_v_box.addWidget(self.activity_type)
         
-        date_v_box = QVBoxLayout()
-        date_v_box.addWidget(QLabel("Date"))
-        date_v_box.addWidget(self.date_entry)
+        # date_v_box = QVBoxLayout()
+        # date_v_box.addWidget(QLabel("Date"))
+        # date_v_box.addWidget(self.date_entry)
         
-        activity_date_h_box = QHBoxLayout()
-        activity_date_h_box.addLayout(activity_v_box)
-        activity_date_h_box.addLayout(date_v_box)
+        # activity_date_h_box = QHBoxLayout()
+        # activity_date_h_box.addLayout(activity_v_box)
+        # activity_date_h_box.addLayout(date_v_box)
         
         h_label = QLabel("hh")
         h_label.setObjectName("small_label")
@@ -346,18 +360,18 @@ class MainWindow(QMainWindow):
         duration_h_box.addWidget(self.seconds)
         duration_h_box.addStretch()
         
-        distance_v_box = QVBoxLayout()
-        distance_v_box.addWidget(QLabel("Distance (km)"))
-        distance_v_box.addWidget(self.distance_entry)
+        # distance_v_box = QVBoxLayout()
+        # distance_v_box.addWidget(QLabel("Distance (km)"))
+        # distance_v_box.addWidget(self.distance_entry)
             
         
-        duration_v_box = QVBoxLayout()
-        duration_v_box.addWidget(QLabel("Duration"))
-        duration_v_box.addLayout(duration_h_box)
+        # duration_v_box = QVBoxLayout()
+        # duration_v_box.addWidget(QLabel("Duration"))
+        # duration_v_box.addLayout(duration_h_box)
         
-        duration_distance_h_box = QHBoxLayout()
-        duration_distance_h_box.addLayout(duration_v_box)
-        duration_distance_h_box.addLayout(distance_v_box)
+        # duration_distance_h_box = QHBoxLayout()
+        # duration_distance_h_box.addLayout(duration_v_box)
+        # duration_distance_h_box.addLayout(distance_v_box)
                 
         pace_h_box = QHBoxLayout()
         pace_h_box.addWidget(self.pace_minutes)
@@ -366,12 +380,23 @@ class MainWindow(QMainWindow):
         pace_h_box.addStretch()
         
         
+        workout_details_grid = QGridLayout()
+        # workout_details_grid.addLayout(activity_date_h_box,0,0,2,2)
+        workout_details_grid.addWidget(QLabel("Activity"),0,0)
+        workout_details_grid.addWidget(QLabel("Date"),0,1)
+        workout_details_grid.addWidget(self.activity_type,1,0)
+        workout_details_grid.addWidget(self.date_entry,1,1)
+        workout_details_grid.addWidget(QLabel("Duration"),2,0)
+        workout_details_grid.addWidget(QLabel("Distace (km)"),2,1)
+        workout_details_grid.addLayout(duration_h_box,3,0)
+        workout_details_grid.addWidget(self.distance_entry,3,1)
+        
+        
         add_run_form = QFormLayout()
         add_run_form.setLabelAlignment(Qt.AlignTop)
         add_run_form.addRow(QLabel("Workout Name"))
         add_run_form.addRow(self.workout_name_entry)
-        add_run_form.addRow(activity_date_h_box)
-        add_run_form.addRow(duration_distance_h_box)
+        add_run_form.addRow(workout_details_grid)
         add_run_form.addRow(QLabel("Pace (min/km)"))
         add_run_form.addRow(pace_h_box)
         
@@ -404,6 +429,7 @@ class MainWindow(QMainWindow):
         tools_dock.setWidget(tools_container)
         
         self.addDockWidget(Qt.LeftDockWidgetArea, tools_dock)
+        self.toggle_dock_tools_act = tools_dock.toggleViewAction()
 
     def calculatePace(self):
         """
@@ -501,5 +527,5 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
-    # apply_stylesheet(app, theme='dark_amber.xml')
+    # apply_stylesheet(app, theme='dark_purple.xml')
     sys.exit(app.exec_())
