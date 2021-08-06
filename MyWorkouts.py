@@ -1,11 +1,13 @@
+import os
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
+from matplotlib.cbook import file_requires_unicode
 from numpy.core import einsumfunc
 from AddWorkout import AddWorkoutGUI
 import sys, json
 import numpy as np
 import PyQt5
 from PyQt5.QtCore import QDate, QLine, QPoint, QTime, Qt
-from PyQt5.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QBoxLayout, QDateEdit, QDesktopWidget, QDoubleSpinBox, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QComboBox, QPushButton, QCheckBox, 
+from PyQt5.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QAction, QApplication, QBoxLayout, QDateEdit, QDesktopWidget, QDoubleSpinBox, QFileDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QComboBox, QMessageBox, QPushButton, QCheckBox, 
                             QFormLayout, QDockWidget, QSpinBox, QTableView, QHeaderView, QGraphicsView, QTextEdit, QTimeEdit, QVBoxLayout, QWidget)
 from PyQt5.QtChart import QChart, QChartView, QLineSeries, QValueAxis
 
@@ -82,6 +84,11 @@ class MainWindow(QMainWindow):
         menu_bar = self.menuBar()
         menu_bar.setNativeMenuBar(False)
 
+        add_workout_act = QAction('Add workouts from csv file', self)
+        add_workout_act.triggered.connect(self.openCSVFile)
+        # Create file menu and add actions
+        file_menu = menu_bar.addMenu('File')
+        file_menu.addAction(add_workout_act)
         # Create view menu and add actions
         view_menu = menu_bar.addMenu('View')
         view_menu.addAction(self.toggle_dock_tools_act)
@@ -523,6 +530,20 @@ class MainWindow(QMainWindow):
         """
         self.data = self.loadJSONFile()
         self.setupChart()
+    
+    def openCSVFile(self):
+        """
+        Add list of workouts from CSV file
+        """
+        self.csv_file, _ = QFileDialog.getOpenFileName(self, "Open File",
+                            os.getenv('Home'), "CSV (*.csv)")
+
+        
+        if self.csv_file:
+            print('File loaded')
+        else:
+            QMessageBox.information(self, "Error",
+                                    "No file loaded", QMessageBox.Ok)
     
 if __name__ == "__main__":
     app = QApplication(sys.argv)
