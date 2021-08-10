@@ -1,5 +1,6 @@
 import os
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
+from PyQt5.QtSql import QSqlDatabase, QSqlQuery, QSqlTableModel
 from matplotlib.cbook import file_requires_unicode
 from numpy.core import einsumfunc
 from AddWorkout import AddWorkoutGUI
@@ -8,7 +9,7 @@ import numpy as np
 import PyQt5
 from PyQt5.QtCore import QDate, QLine, QPoint, QTime, Qt
 from PyQt5.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QAction, QApplication, QBoxLayout, QDateEdit, QDesktopWidget, QDoubleSpinBox, QFileDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QComboBox, QMessageBox, QPushButton, QCheckBox, 
-                            QFormLayout, QDockWidget, QSpinBox, QTableView, QHeaderView, QGraphicsView, QTextEdit, QTimeEdit, QVBoxLayout, QWidget)
+                            QFormLayout, QDockWidget, QSpinBox, QTableView, QHeaderView, QGraphicsView, QTableWidget, QTextEdit, QTimeEdit, QVBoxLayout, QWidget)
 from PyQt5.QtChart import QChart, QChartView, QLineSeries, QValueAxis
 
 from qt_material import apply_stylesheet
@@ -69,13 +70,51 @@ class MainWindow(QMainWindow):
         
         self.setMinimumSize(1300, 650)
         self.setWindowTitle("My Workouts")
-       
-        self.setupWidgets()
-        self.setupChart()
-        self.setupToolsDockWidget()
+        self.createconnection()
+        # self.setupWidgets()
+        # self.setupChart()
+        # self.setupToolsDockWidget()
         
-        self.setupMenu()
+        # self.setupMenu()
+        self.setupTable1()
         self.show()
+    
+    def createconnection(self):
+        self.database = QSqlDatabase.addDatabase("QSQLITE")
+        self.database.setDatabaseName("databases/workout.sql")
+
+        if not self.database.open():
+            print("Unable to open data source file.")
+            print("Connection failed: ", self.database.lastError().text())
+            sys.exit(1) # Error code 1 - signifies error in opening file
+    
+        # Check if the tables we want to use exist in the database
+        tables_needed = {'workouts'}
+        tables_not_found = tables_needed - set(self.database.tables())
+        if tables_not_found:
+            QMessageBox.critical(None, 'Error',
+                'The following tables are missing from the database: {}'.format(tables_not_found))
+            sys.exit(1)
+    
+    def setupTable1(self):
+        """
+        
+        """
+        model = QSqlTableModel()
+        model.setTable('workouts')
+        model.setQuery(QSqlQuery("SELECT * FROM workouts"))
+
+        table_view = QTableView()
+        table_view.setModel(model)
+        table_view.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+        # Populate the model with data
+        model.select()
+
+        # Main layout
+        main_v_box = QVBoxLayout()
+        main_v_box.addWidget(table_view)
+        self.setCentralWidget(table_view)
     
     def setupMenu(self):
         """
